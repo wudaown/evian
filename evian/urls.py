@@ -17,8 +17,15 @@ from django.contrib import admin
 from django.urls import path
 
 from facial.views import FacialView
+from login.views import LoginView
+from course.views import AttendanceView, CourseStatsView, SessionAttendanceView, OverwriteView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('facial/', FacialView.as_view())
+    path('facial/', FacialView.as_view()),
+    path('login/', LoginView.as_view()),
+    path('attendance/', AttendanceView.as_view()), 
+    path('course-stats/', CourseStatsView.as_view()),
+    path('session-attendance/', SessionAttendanceView.as_view()),
+    path('overwrite/', OverwriteView.as_view()),
 ]
