@@ -32,7 +32,8 @@ class AttendanceView(View):
             course_index_list = []
             for c in class_taker_list:
             	course_index = c.course_index
-            	course_index_list.append(course_index)
+            	if (course_index.course.course_name == course):
+            	   course_index_list.append(course_index)
 
             course_index_type_list = []
             for c in course_index_list:
@@ -59,7 +60,7 @@ class AttendanceView(View):
                 if (time):
                 	time = time.strftime("%H:%M")
                 else:
-                	time = ""
+                	time = "__:__"
 
                 class_session = attendance.class_session
                 date = class_session.datetime.strftime("%d-%m-%y")
@@ -116,8 +117,9 @@ class CourseStatsView(View):
             
             course_index_list = []
             for c in class_instructor_list:
-            	course_index = c.course_index
-            	course_index_list.append(course_index)
+                course_index = c.course_index
+                if (course_index.course.course_name == course):
+                    course_index_list.append(course_index)
 
             course_index_type_list = []
             for c in course_index_list:
@@ -148,9 +150,11 @@ class CourseStatsView(View):
             	rate = f"{present}/{total}"
 
             	class_type = c.course_index_type.class_type
+            	course_code = c.course_index_type.course_index.course.course_code
 
             	if class_type == "lab":
             		data_lab_list.append({
+            			'course_code':course_code,
 	                	'index':index,
 	                	'rate':rate,
 	                	'date':date,
@@ -158,6 +162,7 @@ class CourseStatsView(View):
 	                	})
             	elif class_type == "tutorial":
 	            	data_tut_list.append({
+	            		'course_code':course_code,
 	                    'index':index,
 	                    'rate':rate,
 	                    'date':date,
@@ -211,9 +216,6 @@ class SessionAttendanceView(View):
         			'index':index,
         			'time':time
         			})
-        
-
-
 
         data = {'state':state,
         'student':data_list
@@ -225,20 +227,43 @@ class SessionAttendanceView(View):
 class OverwriteView(View):
     def post(self, request):
         body = json.loads(request.body)
-        data = body.get('data')
+        matric_no = body.get('matric')
+        status = body.get('status')
+        index = body.get('index')
+        time = body.get('time')
 
-        print(data)
-        state = False
+        print(matric_no, status, index, time)
         try:
-            # CourseIndex.objects.get(index = index)
-            state = True
-        except:
-            pass
+            course_index = CourseIndex.objects.get(index = index)
+        except CourseIndex.DoesNotExist:
+            course_index = None
 
-        data = {'state':state}
+        state = False
 
+        if (course_index):
+            date = datetime.datetime.strptime(time, "%d-%m-%y").date()
+
+            student = User.objects.get(matric_no = matric_no)
+            course_index_type = CourseIndexType.objects.filter(course_index = course_index)
+
+            for c in course_index_type:
+            	try:
+            	    class_session = Class.objects.get(course_index_type = c, datetime__date = date)
+            	    break
+            	except Class.DoesNotExist:
+            		pass
+
+            try:
+            	attendance = Attendance.objects.get(class_session = class_session, student = student)
+            	attendance.status = status
+            	attendance.save()
+            	state = True
+            except Attendance.DoesNotExist:
+            	pass
+
+        data = {'state':state, 'course':course_index.course.course_name}
         print (data)
-        # return JsonResponse(data)
+        return JsonResponse(data)
 
 
 

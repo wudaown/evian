@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'facial.apps.FacialConfig',
     'login.apps.LoginConfig',
     'course.apps.CourseConfig',
+    'django_cron',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CRON_CLASSES = [
+    "evian.cron.MyCronJob",
 ]
 
 ROOT_URLCONF = 'evian.urls'
